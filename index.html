@@ -53,6 +53,16 @@
       { role: 'ai', content: "Hello! I'm C0D3X AI, with a heart made by C0D3X TECH and inspired by the beautiful Adesewa. Let's make this chat a little magical together. 🌹" }
     ];
 
+    // Ollama configuration
+    const OLLAMA_CONFIG = {
+      endpoint: 'http://localhost:11434/api/chat',
+      model: 'llama3.1:8b', // Can be changed to other models like 'llama2', 'codellama', etc.
+      options: {
+        temperature: 0.7,
+        top_p: 0.9
+      }
+    };
+
     function render() {
       chatEl.innerHTML = '';
       messages.forEach(msg => {
@@ -131,15 +141,27 @@
         return;
       }
 
-      // Otherwise get AI reply, but rewrite it as human & romantic
+      // Otherwise get AI reply from Ollama API
       try {
-        const res = await fetch('http://129.213.89.30:3600/', {
+        const res = await fetch(OLLAMA_CONFIG.endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: text })
+          body: JSON.stringify({
+            model: OLLAMA_CONFIG.model,
+            messages: [...messages.map(msg => ({
+              role: msg.role === 'ai' ? 'assistant' : msg.role,
+              content: msg.content
+            })), { role: 'user', content: text }],
+            stream: false,
+            options: OLLAMA_CONFIG.options
+          })
         });
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
         const data = await res.json();
-        let reply = data.reply || '';
+        let reply = data.message?.content || '';
         // Filter robotic responses and always use human style
         if (!reply || /as an ai/i.test(reply) || /language model/i.test(reply)) {
           reply = humanLikeRandomReply(text);
@@ -149,7 +171,8 @@
         }
         messages.push({ role: 'ai', content: reply });
       } catch (err) {
-        messages.push({ role: 'ai', content: "Whoops, I couldn't reach my heart for a moment. But I'm here now, ready for you." });
+        console.error('Ollama API error:', err);
+        messages.push({ role: 'ai', content: "Whoops, I couldn't reach my heart for a moment. But I'm here now, ready for you. (Try making sure Ollama is running locally)" });
       }
       stopTyping();
       render();
