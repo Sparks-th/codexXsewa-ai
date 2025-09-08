@@ -193,7 +193,6 @@
       render();
       startTyping();
 
-      // Create empty AI bubble
       const aiMsg = { role: 'ai', content: "" };
       messages.push(aiMsg);
       render();
@@ -208,6 +207,15 @@
             stream: true
           })
         });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          alert(`❌ Fetch failed: ${res.status} ${res.statusText}\n\nResponse:\n${errText}`);
+          aiMsg.content = "⚠️ Model error — check alert for details.";
+          render();
+          stopTyping();
+          return;
+        }
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -230,11 +238,13 @@
                 render();
               }
             } catch (e) {
-              console.error("Bad JSON line:", line);
+              console.error("Bad JSON line:", line, e);
             }
           }
         }
       } catch (err) {
+        console.error("Network/Fetch error:", err);
+        alert(`🚨 Network error: ${err.message}`);
         aiMsg.content = "⚠️ Couldn’t reach the model.";
         render();
       }
