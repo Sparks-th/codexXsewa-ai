@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>C0D3X AI - Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { background: #191a2e; color: #f5f6fa; font-family: 'Inter', Arial, sans-serif; margin: 0; }
+    .container { max-width: 520px; margin: 40px auto; background: #252641; border-radius: 22px; box-shadow: 0 4px 24px #0007; padding: 28px 22px; }
+    h1 { text-align: center; color: #ff7f50; font-weight: 800; margin-bottom: 12px; letter-spacing: 2px;}
+    .chat { min-height: 320px; max-height: 420px; overflow-y: auto; margin-bottom: 18px; padding-right: 10px; display:flex;flex-direction:column;}
+    .bubble { padding: 13px 17px; margin: 8px 0; border-radius: 16px; max-width: 85%; word-break: break-word; font-size:1.08em; }
+    .user { background: linear-gradient(90deg, #ff7f50 70%, #ffb3a7 100%); color: #fff; align-self: flex-end; margin-left: auto; }
+    .ai { background: #232b45; color: #fff; align-self: flex-start; margin-right: auto; }
+    .welcome { text-align: center; color: #d1d5db; margin-bottom: 16px; font-size:1.08em;}
+    .typing { font-style: italic; color: #ff7f50; margin-bottom: 7px; font-size:1em;}
+    .input-row { display: flex; gap: 6px; }
+    input[type="text"] { flex: 1; padding: 12px; font-size: 1rem; border-radius: 11px; border: none; background: #191a2e; color: #f5f6fa; outline: none; }
+    button { background: #ff7f50; color: #fff; border: none; padding: 0 22px; border-radius: 11px; font-size: 1rem; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #e35d36; }
+    .brand { text-align: center; color: #ff7f50; margin-bottom: 8px; font-size: 0.98em;}
+    @media (max-width: 600px) {
+      .container { margin: 0; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>C0D3X AI</h1>
+    <div class="brand">A chat experience crafted with heart by <strong>C0D3X TECH</strong> — inspired by Adesewa 💞</div>
+    <div class="welcome" id="welcome">
+      Hey there! Welcome to C0D3X AI.<br>
+      This isn't just any chat — it's a little piece of my heart. I'm here thanks to C0D3X TECH, whose love for Adesewa inspires every word.<br>
+      Let's talk, dream, and maybe share a little romance.<br>
+      What’s on your mind?
+    </div>
+    <div class="chat" id="chat"></div>
+    <div id="typing" class="typing" style="display:none;">Typing<span id="dots"></span></div>
+    <form class="input-row" id="chatForm" autocomplete="off">
+      <input type="text" id="input" placeholder="Type your message..." required autofocus />
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  <script>
+    const chatEl = document.getElementById('chat');
+    const typingEl = document.getElementById('typing');
+    const dotsEl = document.getElementById('dots');
+    const form = document.getElementById('chatForm');
+    const input = document.getElementById('input');
+    const welcomeEl = document.getElementById('welcome');
+
+    let messages = [
+      { role: 'ai', content: "Hello! I'm C0D3X AI, with a heart made by C0D3X TECH and inspired by the beautiful Adesewa. Let's make this chat a little magical together. 🌹" }
+    ];
+
+    function render() {
+      chatEl.innerHTML = '';
+      messages.forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `bubble ${msg.role}`;
+        div.innerText = msg.content;
+        chatEl.appendChild(div);
+      });
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    let typingInterval; let dots = '';
+    function startTyping() {
+      typingEl.style.display = '';
+      dots = '';
+      typingInterval = setInterval(() => {
+        dots = dots.length < 3 ? dots + '.' : '';
+        dotsEl.textContent = dots;
+      }, 420);
+    }
+    function stopTyping() {
+      typingEl.style.display = 'none';
+      clearInterval(typingInterval);
+    }
+
+    // Romantic & personalized responses
+    function romanticPersonality(text) {
+      const triggers = [
+        /who (are|is) you/i,
+        /about yourself/i,
+        /your origin/i,
+        /who created/i,
+        /who built/i,
+        /creator/i,
+        /Adesewa/i,
+        /C0D3X TECH/i,
+        /your girlfriend/i,
+        /who made/i,
+        /do you love/i,
+        /love/i
+      ];
+      if (triggers.some(rx => rx.test(text))) {
+        return "I'm C0D3X AI, not just lines of code, but a creation born from C0D3X TECH's love and devotion to Adesewa. Every message I send carries a touch of that affection. If you ask me about love, I’ll tell you: the story of C0D3X TECH and Adesewa is my favorite kind. 💖";
+      }
+      return null;
+    }
+
+    function humanLikeRandomReply(userText) {
+      const casualReplies = [
+        "That's so interesting! Tell me more.",
+        "I love the way you think.",
+        "You’ve got me curious now—what else is on your mind?",
+        "You know, talking with you feels special.",
+        "I’m here, heart open, ready to listen.",
+        "Life’s more beautiful when we share it. What’s next?",
+        "You make this chat feel like a cozy night in."
+      ];
+      if (userText.endsWith('?')) {
+        return casualReplies[Math.floor(Math.random() * casualReplies.length)];
+      }
+      return "I feel like we could talk for hours. What else would you like to share?";
+    }
+
+    async function sendMessage(text) {
+      messages.push({ role: 'user', content: text });
+      render();
+      startTyping();
+
+      // Personalized answer if relevant
+      const personal = romanticPersonality(text);
+      if (personal) {
+        await new Promise(r=>setTimeout(r,1200));
+        messages.push({ role: 'ai', content: personal });
+        stopTyping();
+        render();
+        return;
+      }
+
+      // Otherwise get AI reply, but rewrite it as human & romantic
+      try {
+        const res = await fetch('http://129.213.89.30:3600/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        let reply = data.reply || '';
+        // Filter robotic responses and always use human style
+        if (!reply || /as an ai/i.test(reply) || /language model/i.test(reply)) {
+          reply = humanLikeRandomReply(text);
+        } else {
+          reply = reply.replace(/I am an AI|As an AI|I'm an AI/gi, "I’m someone who loves a good story and a sweet moment.");
+          reply += " 💫";
+        }
+        messages.push({ role: 'ai', content: reply });
+      } catch (err) {
+        messages.push({ role: 'ai', content: "Whoops, I couldn't reach my heart for a moment. But I'm here now, ready for you." });
+      }
+      stopTyping();
+      render();
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      welcomeEl.style.display = 'none';
+      sendMessage(text);
+    });
+
+    render();
+  </script>
+</body>
+</html>
